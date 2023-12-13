@@ -2,32 +2,32 @@
 // 06 - Add more data types - unions
 // ----------------------------------------------------------------------------
 
-type Value = 
-  | ValNum of int 
+type Value =
+  | ValNum of int
   | ValClosure of string * Expression * VariableContext
   | ValTuple of Value * Value
   // NOTE: Value representing a union case. Again, we use 'bool':
   // 'true' for 'Case1' and 'false' for 'Case2'
   | ValCase of bool * Value
 
-and Expression = 
+and Expression =
   | Constant of int
   | Binary of string * Expression * Expression
   | Variable of string
-  | Unary of string * Expression 
+  | Unary of string * Expression
   | If of Expression * Expression * Expression
   | Application of Expression * Expression
   | Lambda of string * Expression
   | Let of string * Expression * Expression
   | Tuple of Expression * Expression
   | TupleGet of bool * Expression
-  // NOTE: 'Case' represents creating a union value and 'Match' pattern 
-  // matching. You can read 'Match(e, v, e1, e2)' as F# pattern matching 
+  // NOTE: 'Case' represents creating a union value and 'Match' pattern
+  // matching. You can read 'Match(e, v, e1, e2)' as F# pattern matching
   // of the form: 'match e with v -> e1 | v -> e2'
   | Case of bool * Expression
   | Match of Expression * string * Expression * Expression
 
-and VariableContext = 
+and VariableContext =
   Map<string, Value>
 
 // ----------------------------------------------------------------------------
@@ -35,40 +35,83 @@ and VariableContext =
 // ----------------------------------------------------------------------------
 
 let rec evaluate (ctx:VariableContext) e =
-  match e with 
+  match e with
   | Constant n -> ValNum n
   | Binary(op, e1, e2) ->
       let v1 = evaluate ctx e1
       let v2 = evaluate ctx e2
-      match v1, v2 with 
-      | ValNum n1, ValNum n2 -> 
-          match op with 
+      match v1, v2 with
+      | ValNum n1, ValNum n2 ->
+          match op with
           | "+" -> ValNum(n1 + n2)
           | "*" -> ValNum(n1 * n2)
           | _ -> failwith "unsupported binary operator"
       | _ -> failwith "invalid argument of binary operator"
   | Variable(v) ->
-      match ctx.TryFind v with 
+      match ctx.TryFind v with
       | Some res -> res
       | _ -> failwith ("unbound variable: " + v)
 
   // NOTE: You have the following from before
-  | Unary(op, e) -> failwith "implemented in step 2"
-  | If(econd, etrue, efalse) -> failwith "implemented in step 2"
-  | Lambda(v, e) -> failwith "implemented in step 3"
-  | Application(e1, e2) -> failwith "implemented in step 3"
-  | Let(v, e1, e2) -> failwith "implemented in step 4"
-  | Tuple(e1, e2) -> failwith "implemented in step 5"
-  | TupleGet(b, e) -> failwith "implemented in step 5"
+  | Unary(op, e) ->
+      let v = evaluate ctx e
+      match v with
+      | ValNum n ->
+        match op with
+        | "-" -> ValNum(-n)
+        | _ -> failwith "unsupported unary operator"
+      | _ -> failwith "unsupported value for unary operator"
+  | If(cond, cont1, cont2) ->
+      let v1 = evaluate ctx cond
+      match v1 with
+      | ValNum n1 ->
+        if n1 = 1 then
+          evaluate ctx cont1
+        else
+          evaluate ctx cont2
+      | _ -> failwith "unsupported value for if"
+  | Lambda(v, e) ->
+      ValClosure(v, e, ctx)
+  | Application(e1, e2) ->
+      let v1 = evaluate ctx e1
+      match v1 with
+      | ValClosure(v, e, c) ->
+        let v2 = evaluate ctx e2
+        let newCtx = c.Add(v, v2)
+        evaluate newCtx e
+      | _ -> failwith "not a function"
+  | Let(v, e1, e2) ->
+    let value = evaluate ctx e1
+    let newCtx = ctx.Add(v, value)
+    evaluate newCtx e2
+  | Tuple(e1, e2) ->
+      let val1 = evaluate ctx e1
+      let val2 = evaluate ctx e2
+      ValTuple(val1, val2)
+  | TupleGet(b, e) ->
+      let value = evaluate ctx e
+      match value with
+      | ValTuple(val1, val2) ->
+          if b then
+            val1
+          else
+            val2
+      | _ -> failwith "not a tuple"
 
   | Match(e, v, e1, e2) ->
       // TODO: Implement pattern matching. Note you need to
       // assign the right value to the variable of name 'v'!
-      failwith "not implemented"
+      let value = evaluate ctx e
+      match value with
+      | ValCase(b, e) ->
+        let newCtx = ctx.Add(v, e)
+        evaluate newCtx (if b then e1 else e2)
+      | _ ->
+        failwith "invalid argument of match"
 
   | Case(b, e) ->
       // TODO: Create a union value.
-      failwith "not implemented"
+      ValCase(b, evaluate ctx e)
 
 // ----------------------------------------------------------------------------
 // Test cases
@@ -82,15 +125,15 @@ evaluate Map.empty ec1
 // Data types - working with union cases
 //   match Case1(21) with Case1(x) -> x*2 | Case2(x) -> x*100
 //   match Case2(21) with Case1(x) -> x*2 | Case2(x) -> x*100
-let ec2 = 
-  Match(Case(true, Constant(21)), "x", 
+let ec2 =
+  Match(Case(true, Constant(21)), "x",
     Binary("*", Variable("x"), Constant(2)),
     Binary("*", Variable("x"), Constant(100))
   )
 evaluate Map.empty ec2
 
-let ec3 = 
-  Match(Case(false, Constant(21)), "x", 
+let ec3 =
+  Match(Case(false, Constant(21)), "x",
     Binary("*", Variable("x"), Constant(2)),
     Binary("*", Variable("x"), Constant(100))
   )
