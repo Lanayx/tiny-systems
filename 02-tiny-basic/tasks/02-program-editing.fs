@@ -6,82 +6,99 @@ module TinyBASIC
 type Value =
   | StringValue of string
 
-type Expression = 
+type Expression =
   | Const of Value
 
-type Command = 
+type Command =
   | Print of Expression
-  | Run 
+  | Run
   | Goto of int
 
-type State = 
+type State =
   { Program : list<int * Command> }
 
 // ----------------------------------------------------------------------------
 // Utilities
 // ----------------------------------------------------------------------------
 
-let printValue value = failwith "implemented in step 1"
-let getLine state line = failwith "implemented in step 1"
+let printValue value =
+  match value with
+  | StringValue s -> printf "%s" s
 
-let addLine state (line, cmd) = 
-  // TODO: Add a given line to the program state. This should overwrite 
-  // a previous line (if there is one with the same number) and also ensure
-  // that state.Program is sorted by the line number.
-  // HINT: Use List.filter and List.sortBy. Use F# Interactive to test them!
-  failwith "not implemented"
+let getLine state line =
+  state.Program |> List.find (fun (l, _) -> l = line)
+
+let addLine state (line, cmd) =
+  match state.Program |> List.tryFind (fun (l, _) -> l = line) with
+  | Some _ ->
+      { state with Program = state.Program |> List.map (fun (l, c) -> if l = line then (l, cmd) else (l, c)) }
+  | None ->
+      { state with Program = (line, cmd) :: state.Program |> List.sortBy fst }
 
 // ----------------------------------------------------------------------------
 // Evaluator
 // ----------------------------------------------------------------------------
 
-let rec evalExpression expr = failwith "implemented in step 1"
+let rec evalExpression expr =
+  match expr with
+  | Const value -> value
 
 let rec runCommand state (line, cmd) =
-  match cmd with 
+  match cmd with
   | Run ->
-      let first = List.head state.Program    
+      let first = List.head state.Program
       runCommand state first
+  | Print(expr) ->
+      let value = evalExpression expr
+      printValue value
+      runNextLine state line
+  | Goto(line) ->
+      let line = getLine state line
+      runCommand state line
 
-  | Print(expr) -> failwith "implemented in step 1"
-  | Goto(line) -> failwith "implemented in step 1"
+and runNextLine state line =
+    let findResult = state.Program |> List.tryFind (fun (l, _) -> l > line)
+    match findResult with
+    | Some line -> runCommand state line
+    | None -> state
 
-and runNextLine state line = failwith "implemented in step 1"
 
 // ----------------------------------------------------------------------------
 // Interactive program editing
 // ----------------------------------------------------------------------------
 
 let runInput state (line, cmd) =
-  // TODO: Simulate what happens when the user enters a line of code in the 
-  // interactive terminal. If the 'line' number is 'Some ln', we want to 
+  // TODO: Simulate what happens when the user enters a line of code in the
+  // interactive terminal. If the 'line' number is 'Some ln', we want to
   // insert the line into the right location of the program (addLine); if it
-  // is 'None', then we want to run it immediately. To make sure that 
-  // 'runCommand' does not try to run anything afterwards, you can pass 
+  // is 'None', then we want to run it immediately. To make sure that
+  // 'runCommand' does not try to run anything afterwards, you can pass
   // 'System.Int32.MaxValue' as the line number to it (or you could use -1
   // and handle that case specially in 'runNextLine')
-  failwith "not implemented"
-      
+    match line with
+    | Some ln -> addLine state (ln, cmd)
+    | None -> runCommand state (System.Int32.MaxValue, cmd)
+
 
 let runInputs state cmds =
   // TODO: Apply all the specified commands to the program state using 'runInput'.
   // This is a one-liner if you use 'List.fold' which has the following type:
   //   ('State -> 'T -> 'State) -> 'State -> list<'T> -> 'State
-  failwith "not implemented" 
+  cmds |> List.fold runInput state
 
 // ----------------------------------------------------------------------------
 // Test cases
 // ----------------------------------------------------------------------------
 
-let helloOnce = 
-  [ Some 10, Print (Const (StringValue "HELLO WORLD\n")) 
-    Some 10, Print (Const (StringValue "HELLO NPRG077\n")) 
+let helloOnce =
+  [ Some 10, Print (Const (StringValue "HELLO WORLD\n"))
+    Some 10, Print (Const (StringValue "HELLO NPRG077\n"))
     None, Run ]
 
-let helloInf = 
+let helloInf =
   [ Some 20, Goto 10
-    Some 10, Print (Const (StringValue "HELLO WORLD\n")) 
-    Some 10, Print (Const (StringValue "HELLO NPRG077\n")) 
+    Some 10, Print (Const (StringValue "HELLO WORLD\n"))
+    Some 10, Print (Const (StringValue "HELLO NPRG077\n"))
     None, Run ]
 
 let empty = { Program = [] }
