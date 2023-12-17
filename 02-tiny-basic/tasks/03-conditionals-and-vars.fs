@@ -137,7 +137,6 @@ let runInput state (line, cmd) =
     | Some ln -> addLine state (ln, cmd)
     | None -> runCommand state (System.Int32.MaxValue, cmd)
 
-
 let runInputs state cmds =
   cmds |> List.fold runInput state
 
