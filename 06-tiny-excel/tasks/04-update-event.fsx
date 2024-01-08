@@ -39,7 +39,7 @@ let rec collectReferences (expr:Expr) : Address list =
   failwith "not implemented"
 
 
-let makeNode addr (sheet:LiveSheet) expr = 
+let makeNode (sheet:LiveSheet) expr = 
   // TODO: Add handling of 'Update' events!
   //
   // * When creating a node, we need to create a new event and 
@@ -73,7 +73,7 @@ let makeSheet list =
 let rec relocateReferences (srcCol, srcRow) (tgtCol, tgtRow) (srcExpr:Expr) = 
   failwith "implemented in step 2"
 
-let expand (r1, c1) (r2, c2) (sheet:LiveSheet) = 
+let expand (srcCol, srcRow) (tgtCol, tgtRow) (sheet:LiveSheet) : LiveSheet = 
   failwith "implemented in step 2 and 3"
 
 

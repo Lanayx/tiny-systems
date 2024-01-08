@@ -35,7 +35,7 @@ let rec eval (sheet:LiveSheet) expr =
   failwith "implemented in step 1"
   
 
-let makeNode addr (sheet:LiveSheet) (expr:Expr) : CellNode = 
+let makeNode (sheet:LiveSheet) (expr:Expr) : CellNode = 
   // TODO: Create a dependency graph node. In this step, we just want
   // to get the same functionality as before (i.e., no event handling)
   // so evaluate the expression, store it and return the node.
@@ -59,7 +59,7 @@ let rec relocateReferences (srcCol, srcRow) (tgtCol, tgtRow) (srcExpr:Expr) =
   failwith "implemented in step 2"
 
 
-let expand (r1, c1) (r2, c2) (sheet:LiveSheet) = 
+let expand (srcCol, srcRow) (tgtCol, tgtRow) (sheet:LiveSheet) : LiveSheet = 
   // TODO: This needs to call 'makeNode' and add the resulting node, 
   // instead of just adding the expression to the map as is.
   failwith "implemented in step 2"

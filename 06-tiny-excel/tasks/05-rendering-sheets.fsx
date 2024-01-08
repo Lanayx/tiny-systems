@@ -31,7 +31,7 @@ let rec eval (sheet:LiveSheet) expr =
 let rec collectReferences expr = 
   failwith "implemented in step 4"
 
-let makeNode addr (sheet:LiveSheet) expr = 
+let makeNode (sheet:LiveSheet) expr = 
   failwith "implemented in step 3 and 4"
 
 let updateNode addr (sheet:LiveSheet) expr = 
@@ -47,7 +47,7 @@ let makeSheet list =
 let rec relocateReferences (srcCol, srcRow) (tgtCol, tgtRow) (srcExpr:Expr) = 
   failwith "implemented in step 2"
 
-let expand (r1, c1) (r2, c2) (sheet:LiveSheet) = 
+let expand (srcCol, srcRow) (tgtCol, tgtRow) (sheet:LiveSheet) : LiveSheet = 
   failwith "implemented in step 2 and 3"
 
 // ----------------------------------------------------------------------------

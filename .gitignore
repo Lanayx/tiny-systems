@@ -3,3 +3,6 @@ bin
 obj
 .vs
 wip
+node_modules
+fable_modules
+*.fs.js
