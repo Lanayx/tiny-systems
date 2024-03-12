@@ -86,7 +86,7 @@ let makeNode (sheet:LiveSheet) expr =
     match Map.tryFind a sheet with
     | Some(e) ->
       let result = { Value = e.Value; Expr = expr; Updated = Event<unit>() }
-      result.Updated.Publish.AddHandler(fun _ () ->
+      e.Updated.Publish.AddHandler(fun _ () ->
         result.Value <- e.Value
         result.Updated.Trigger()
       )
